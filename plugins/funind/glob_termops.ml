@@ -723,6 +723,8 @@ let resolve_and_replace_implicits ?(flags=Pretyping.all_and_fail_flags) ?(expect
   (* FIXME : JF (30/03/2017) I'm not completely sure to have split understand as needed. 
 If someone knows how to prevent solved existantial removal in  understand, please do not hesitate to change the computation of [ctx] here *) 
   let ctx,_ = Pretyping.ise_pretype_gen flags env sigma Pretyping.empty_lvar expected_type rt in
+  let ctx, f = Evarutil.nf_evars_and_universes ctx in
+
   (* then we map [rt] to replace the implicit holes by their values *)
   let rec change rt =
     match rt with
@@ -745,7 +747,7 @@ If someone knows how to prevent solved existantial removal in  understand, pleas
            match evi.evar_body with
            | Evar_defined c ->
            (* we just have to lift the solution in glob_term *)
-              Detyping.detype false [] env ctx c
+              Detyping.detype false [] env ctx (f c)
            | Evar_empty -> rt (* the hole was not solved : we do nothing *)
        )
     | _ -> Glob_ops.map_glob_constr change rt 
